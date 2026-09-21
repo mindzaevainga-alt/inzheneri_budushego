@@ -87,24 +87,36 @@
   <video id="v6" class="ar-video" src="6-mine.mp4" preload="auto" loop muted playsinline webkit-playsinline></video>
 
   <script>
+    // Принудительно запускаем ВСЕ видео на маркерах
+    function playAllVideos() {
+      for (var i = 1; i <= 6; i++) {
+        var v = document.getElementById('v' + i);
+        if (v) {
+          v.muted = true;
+          v.loop = true;
+          v.playsInline = true;
+          var promise = v.play();
+          if (promise) {
+            promise.catch(function(e){ console.log('Автоплей заблокирован:', e); });
+          }
+        }
+      }
+    }
+
+    // Растягиваем видеофон камеры на весь экран
     function fixARVideo() {
       var arVideos = document.querySelectorAll('video');
       arVideos.forEach(function(v) {
-        // Если это одно из видео на маркерах (v1..v6) — принудительно запускаем
         if (v.id && /^v\d$/.test(v.id)) {
-          v.muted = true;
-          v.loop = true;
-          v.play().catch(function(e){ console.log('Не удалось запустить ' + v.id + ':', e); });
-        } else {
-          // Видеофон камеры — растягиваем на весь экран
-          v.style.position = 'fixed';
-          v.style.top = '0';
-          v.style.left = '0';
-          v.style.width = '100vw';
-          v.style.height = '100vh';
-          v.style.objectFit = 'cover';
-          v.style.zIndex = '0';
+          return; // это видео на маркере — не трогаем
         }
+        v.style.position = 'fixed';
+        v.style.top = '0';
+        v.style.left = '0';
+        v.style.width = '100vw';
+        v.style.height = '100vh';
+        v.style.objectFit = 'cover';
+        v.style.zIndex = '0';
       });
       var canvases = document.querySelectorAll('canvas');
       canvases.forEach(function(c) {
@@ -119,19 +131,22 @@
       });
     }
 
+    // Применяем несколько раз
+    setTimeout(playAllVideos, 500);
+    setTimeout(playAllVideos, 1500);
+    setTimeout(playAllVideos, 3000);
     setTimeout(fixARVideo, 500);
     setTimeout(fixARVideo, 1500);
     setTimeout(fixARVideo, 3000);
-    window.addEventListener('load', fixARVideo);
-    window.addEventListener('resize', fixARVideo);
 
-    // Принудительный запуск всех видео по первому касанию
-    document.body.addEventListener('touchstart', function() {
-      for (var i = 1; i <= 6; i++) {
-        var v = document.getElementById('v' + i);
-        if (v) { v.play().catch(function(){}); }
-      }
-    }, { once: true });
+    window.addEventListener('load', function() {
+      playAllVideos();
+      fixARVideo();
+    });
+
+    // Принудительный запуск по первому касанию экрана
+    document.body.addEventListener('touchstart', playAllVideos, { once: false });
+    document.body.addEventListener('click', playAllVideos, { once: false });
   </script>
 
 </body>
